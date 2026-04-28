@@ -12,7 +12,7 @@ headers = {"Authorization": TOKEN}
 
 r = requests.get("https://discord.com/api/v10/users/@me", headers=headers)
 if r.status_code != 200:
-    print("Invalid token")
+    print("Invalid token!")
     exit()
 
 user = r.json()
