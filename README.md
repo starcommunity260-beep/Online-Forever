@@ -20,9 +20,7 @@ By using this code, you are automating your Discord Account. This is against Dis
 **DO <ins>NOT</ins> GIVE YOUR DISCORD TOKEN TO ANYONE.**
 #### Giving your token to someone else will give them the ability to log into your account without the password or 2FA.
 
-<p align="center">
-  <img height="10px" width="10000px" src="https://i.imgur.com/w6MUcN8.png"/>
-</p>
+---
 
 ## ✨ Features
 - Secure [🔒]
@@ -30,6 +28,8 @@ By using this code, you are automating your Discord Account. This is against Dis
 - Account will stay 24/7 online
 - Supports all three status modes (Online, Idle, Do Not Disturb)
 - Can be used on any platform that supports [Python](https://python.org)
+
+---
 
 ## 🔎 Obtaining Your Token
 You will need an user token inorder to use this code. You can obtain it by doing the following:
@@ -43,9 +43,7 @@ You will need an user token inorder to use this code. You can obtain it by doing
 8. Scroll down till you see an entry named `Authorization`. Copy the line next to it.
 9. This is your token. <ins>**DO NOT GIVE IT TO ANYONE**</ins>.
 
-<p align="center">
-  <img height="10px" width="10000px" src="https://i.imgur.com/w6MUcN8.png"/>
-</p>
+---
 
 ## 🛠️ Installation
 
@@ -56,17 +54,13 @@ You will need an user token inorder to use this code. You can obtain it by doing
 6. Open command prompt where both the files are present and run `pip install -r requirements.txt`
 7. Once the packages are downloaded, either double-click the python file in order to run it or open command prompt where the python file is present and run `python main.py`
 
-<p align="center">
-  <img height="10px" width="10000px" src="https://i.imgur.com/w6MUcN8.png"/>
-</p>
+---
 
 ## 🔧 Known Errors And Fixes
 ### [Discord] Status is not changing
 
 Just wait for a few minutes. It takes some time for Discord to refresh your status.
 
-<p align="center">
-  <img height="10px" width="10000px" src="https://i.imgur.com/w6MUcN8.png"/>
-</p>
+---
 
 <p align="center">Online Forever is licensed under GNU General Public License ❤️</p>
