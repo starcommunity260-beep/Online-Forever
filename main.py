@@ -3,22 +3,20 @@ import json
 import requests
 import websockets
 import os
-import time
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# ================== ตั้งค่าที่นี่ ==================
+# ================== CONFIG ==================
 TOKEN = os.environ.get("TOKEN")
 if not TOKEN:
-    TOKEN = "ใส่ Token ที่นี่"
+    TOKEN = "PUT_YOUR_TOKEN_HERE"
 
 STATUS = "online"
-CUSTOM_STATUS = "ออนไลน์ 24/7 🔥"
+CUSTOM_STATUS = "Online 24/7 🔥"
 USE_EMOJI = True
 EMOJI = "🔥"
-# ===============================================
+# ============================================
 
-# ===== HTTP Server สำหรับ Render =====
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -31,18 +29,16 @@ threading.Thread(
     target=lambda: HTTPServer(("0.0.0.0", 10000), Handler).serve_forever(),
     daemon=True
 ).start()
-print("✅ HTTP Server เปิดที่ port 10000")
-# =====================================
+print("[OK] HTTP Server started on port 10000")
 
 headers = {"Authorization": TOKEN}
-
 r = requests.get("https://discord.com/api/v10/users/@me", headers=headers)
 if r.status_code != 200:
-    print("❌ Token ผิดหรือไม่ได้ตั้ง ENV!")
+    print("[ERROR] Invalid token!")
     exit()
 
 user = r.json()
-print(f"✅ ล็อกอินสำเร็จ → {user['username']} ({user['id']})")
+print(f"[OK] Logged in as {user['username']} ({user['id']})")
 
 activity = {
     "name": "Custom Status",
@@ -56,7 +52,6 @@ if USE_EMOJI and EMOJI:
 
 async def discord_gateway():
     uri = "wss://gateway.discord.gg/?v=10&encoding=json"
-
     async with websockets.connect(uri) as ws:
         hello = json.loads(await ws.recv())
         heartbeat_interval = hello["d"]["heartbeat_interval"]
@@ -84,7 +79,7 @@ async def discord_gateway():
             }
         }
         await ws.send(json.dumps(identify))
-        print("✅ เชื่อมต่อ Discord Gateway สำเร็จ → Online 24/7")
+        print("[OK] Connected to Discord Gateway -> Online 24/7")
 
         while True:
             try:
@@ -93,7 +88,7 @@ async def discord_gateway():
                 if data.get("op") == 11:
                     continue
             except Exception as e:
-                print("Connection lost, reconnecting...", e)
+                print(f"[WARN] Connection lost: {e}")
                 break
 
 async def main():
@@ -101,9 +96,8 @@ async def main():
         try:
             await discord_gateway()
         except Exception as e:
-            print("เกิดข้อผิดพลาดใหญ่:", e)
-
-        print("Reconnecting in 5 seconds...")
+            print(f"[ERROR] {e}")
+        print("[INFO] Reconnecting in 5 seconds...")
         await asyncio.sleep(5)
 
 asyncio.run(main())
