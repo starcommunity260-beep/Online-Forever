@@ -3,11 +3,12 @@ import json
 import requests
 import websockets
 import os
+import time
 
 # ================== ตั้งค่าที่นี่ ==================
 TOKEN = os.environ.get("TOKEN")
 if not TOKEN:
-    TOKEN = "ใส่ Token ที่นี่"   # กรณีไม่มี ENV
+    TOKEN = "ใส่ Token ที่นี่"
 
 STATUS = "online"
 CUSTOM_STATUS = "ออนไลน์ 24/7 🔥"
@@ -37,7 +38,7 @@ if USE_EMOJI and EMOJI:
 
 async def discord_gateway():
     uri = "wss://gateway.discord.gg/?v=10&encoding=json"
-    
+
     async with websockets.connect(uri) as ws:
         hello = json.loads(await ws.recv())
         heartbeat_interval = hello["d"]["heartbeat_interval"]
@@ -45,7 +46,10 @@ async def discord_gateway():
         async def heartbeat():
             while True:
                 await asyncio.sleep(heartbeat_interval / 1000)
-                await ws.send(json.dumps({"op": 1, "d": None}))
+                try:
+                    await ws.send(json.dumps({"op": 1, "d": None}))
+                except Exception:
+                    break  # หยุด heartbeat ถ้า ws ปิดแล้ว
 
         asyncio.create_task(heartbeat())
 
@@ -62,8 +66,7 @@ async def discord_gateway():
             }
         }
         await ws.send(json.dumps(identify))
-
-        print("✅ Connected to Discord Gateway")
+        print("✅ เชื่อมต่อ Discord Gateway สำเร็จ → Online 24/7")
 
         while True:
             try:
@@ -75,11 +78,15 @@ async def discord_gateway():
                 print("Connection lost, reconnecting...", e)
                 break
 
-# ============== วนลูปหลัก ==============
-while True:
-    try:
-        asyncio.run(discord_gateway())
-    except Exception as e:
-        print("เกิดข้อผิดพลาดใหญ่:", e)
-    print("Reconnecting in 5 seconds...")
-    asyncio.sleep(5)   # ← ใช้แบบนี้ (ไม่ใส่ await)
+# ============== วนลูปหลัก (แก้แล้ว) ==============
+async def main():
+    while True:
+        try:
+            await discord_gateway()
+        except Exception as e:
+            print("เกิดข้อผิดพลาดใหญ่:", e)
+
+        print("Reconnecting in 5 seconds...")
+        await asyncio.sleep(5)  # ใช้ async sleep แทน time.sleep
+
+asyncio.run(main())
