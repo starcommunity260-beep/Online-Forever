@@ -44,16 +44,21 @@ activity = {
 
 async def discord_gateway():
     uri = "wss://gateway.discord.gg/?v=10&encoding=json"
-    async with websockets.connect(uri) as ws:
+    async with websockets.connect(uri, max_size=10_000_000) as ws:
         hello = json.loads(await ws.recv())
         heartbeat_interval = hello["d"]["heartbeat_interval"]
+        print(f"[INFO] Heartbeat interval: {heartbeat_interval}ms", flush=True)
 
         async def heartbeat():
+            count = 0
             while True:
                 await asyncio.sleep(heartbeat_interval / 1000)
                 try:
                     await ws.send(json.dumps({"op": 1, "d": None}))
+                    count += 1
+                    print(f"[HEARTBEAT] Sent #{count} - Bot is alive!", flush=True)
                 except:
+                    print("[HEARTBEAT] Failed - connection dropped", flush=True)
                     break
 
         asyncio.create_task(heartbeat())
@@ -66,18 +71,27 @@ async def discord_gateway():
             }
         }))
         print("[OK] Connected to Discord Gateway!", flush=True)
+        print(f"[OK] Status set to: {STATUS}", flush=True)
+        print(f"[OK] Custom status: {CUSTOM_STATUS}", flush=True)
 
+        msg_count = 0
         while True:
             try:
                 data = json.loads(await ws.recv())
-                if data.get("op") == 11:
+                op = data.get("op")
+                if op == 11:
                     continue
+                msg_count += 1
+                print(f"[EVENT] #{msg_count} op={op} t={data.get('t')}", flush=True)
             except Exception as e:
                 print(f"[WARN] Connection lost: {e}", flush=True)
                 break
 
 async def main():
+    run = 0
     while True:
+        run += 1
+        print(f"[INFO] Starting connection attempt #{run}", flush=True)
         try:
             await discord_gateway()
         except Exception as e:
