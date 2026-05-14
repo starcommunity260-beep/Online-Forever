@@ -6,16 +6,10 @@ import os
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# ================== CONFIG ==================
-TOKEN = os.environ.get("TOKEN")
-if not TOKEN:
-    TOKEN = "PUT_YOUR_TOKEN_HERE"
-
+TOKEN = os.environ.get("TOKEN", "PUT_YOUR_TOKEN_HERE")
 STATUS = "online"
 CUSTOM_STATUS = "Online 24/7 🔥"
-USE_EMOJI = True
 EMOJI = "🔥"
-# ============================================
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -29,26 +23,24 @@ threading.Thread(
     target=lambda: HTTPServer(("0.0.0.0", 10000), Handler).serve_forever(),
     daemon=True
 ).start()
-print("[OK] HTTP Server started on port 10000")
+print("[OK] HTTP Server started on port 10000", flush=True)
 
 headers = {"Authorization": TOKEN}
 r = requests.get("https://discord.com/api/v10/users/@me", headers=headers)
 if r.status_code != 200:
-    print("[ERROR] Invalid token!")
+    print(f"[ERROR] Invalid token! Status: {r.status_code}", flush=True)
     exit()
 
 user = r.json()
-print(f"[OK] Logged in as {user['username']} ({user['id']})")
+print(f"[OK] Logged in as {user['username']} ({user['id']})", flush=True)
 
 activity = {
     "name": "Custom Status",
     "type": 4,
     "state": CUSTOM_STATUS,
-    "id": "custom"
+    "id": "custom",
+    "emoji": {"name": EMOJI, "id": None, "animated": False}
 }
-
-if USE_EMOJI and EMOJI:
-    activity["emoji"] = {"name": EMOJI, "id": None, "animated": False}
 
 async def discord_gateway():
     uri = "wss://gateway.discord.gg/?v=10&encoding=json"
@@ -61,34 +53,27 @@ async def discord_gateway():
                 await asyncio.sleep(heartbeat_interval / 1000)
                 try:
                     await ws.send(json.dumps({"op": 1, "d": None}))
-                except Exception:
+                except:
                     break
 
         asyncio.create_task(heartbeat())
-
-        identify = {
+        await ws.send(json.dumps({
             "op": 2,
             "d": {
                 "token": TOKEN,
                 "properties": {"$os": "windows", "$browser": "chrome", "$device": "pc"},
-                "presence": {
-                    "status": STATUS,
-                    "afk": False,
-                    "activities": [activity]
-                }
+                "presence": {"status": STATUS, "afk": False, "activities": [activity]}
             }
-        }
-        await ws.send(json.dumps(identify))
-        print("[OK] Connected to Discord Gateway -> Online 24/7")
+        }))
+        print("[OK] Connected to Discord Gateway!", flush=True)
 
         while True:
             try:
-                msg = await ws.recv()
-                data = json.loads(msg)
+                data = json.loads(await ws.recv())
                 if data.get("op") == 11:
                     continue
             except Exception as e:
-                print(f"[WARN] Connection lost: {e}")
+                print(f"[WARN] Connection lost: {e}", flush=True)
                 break
 
 async def main():
@@ -96,8 +81,8 @@ async def main():
         try:
             await discord_gateway()
         except Exception as e:
-            print(f"[ERROR] {e}")
-        print("[INFO] Reconnecting in 5 seconds...")
+            print(f"[ERROR] {e}", flush=True)
+        print("[INFO] Reconnecting in 5s...", flush=True)
         await asyncio.sleep(5)
 
 asyncio.run(main())
