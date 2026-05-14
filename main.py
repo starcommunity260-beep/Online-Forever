@@ -4,6 +4,8 @@ import requests
 import websockets
 import os
 import time
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # ================== ตั้งค่าที่นี่ ==================
 TOKEN = os.environ.get("TOKEN")
@@ -15,6 +17,22 @@ CUSTOM_STATUS = "ออนไลน์ 24/7 🔥"
 USE_EMOJI = True
 EMOJI = "🔥"
 # ===============================================
+
+# ===== HTTP Server สำหรับ Render =====
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+    def log_message(self, *args):
+        pass
+
+threading.Thread(
+    target=lambda: HTTPServer(("0.0.0.0", 10000), Handler).serve_forever(),
+    daemon=True
+).start()
+print("✅ HTTP Server เปิดที่ port 10000")
+# =====================================
 
 headers = {"Authorization": TOKEN}
 
@@ -49,7 +67,7 @@ async def discord_gateway():
                 try:
                     await ws.send(json.dumps({"op": 1, "d": None}))
                 except Exception:
-                    break  # หยุด heartbeat ถ้า ws ปิดแล้ว
+                    break
 
         asyncio.create_task(heartbeat())
 
@@ -78,7 +96,6 @@ async def discord_gateway():
                 print("Connection lost, reconnecting...", e)
                 break
 
-# ============== วนลูปหลัก (แก้แล้ว) ==============
 async def main():
     while True:
         try:
@@ -87,6 +104,6 @@ async def main():
             print("เกิดข้อผิดพลาดใหญ่:", e)
 
         print("Reconnecting in 5 seconds...")
-        await asyncio.sleep(5)  # ใช้ async sleep แทน time.sleep
+        await asyncio.sleep(5)
 
 asyncio.run(main())
