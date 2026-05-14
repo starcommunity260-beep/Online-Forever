@@ -2,30 +2,28 @@ import asyncio
 import json
 import requests
 import websockets
-import os   # ← เพิ่มบรรทัดนี้
+import os
 
-# ================== ใช้ ENV แทน (สำคัญ) ==================
-TOKEN = os.environ.get("TOKEN")   # Render จะอ่านจาก Environment Variable
+# ================== ตั้งค่าที่นี่ ==================
+TOKEN = os.environ.get("TOKEN")
 if not TOKEN:
-    TOKEN = "ใส่ Token ของคุณที่นี่"   # ถ้าไม่มี ENV ค่อยใช้ตัวนี้ (สำรอง)
+    TOKEN = "ใส่ Token ที่นี่"   # กรณีไม่มี ENV
 
-STATUS = "online"                    # online / idle / dnd
-CUSTOM_STATUS = "ออนไลน์ 24/7 🔥"     # ใส่ข้อความไทย-อังกฤษได้
+STATUS = "online"
+CUSTOM_STATUS = "ออนไลน์ 24/7 🔥"
 USE_EMOJI = True
 EMOJI = "🔥"
-# =======================================================
+# ===============================================
 
 headers = {"Authorization": TOKEN}
 
-# เช็ค Token
 r = requests.get("https://discord.com/api/v10/users/@me", headers=headers)
 if r.status_code != 200:
-    print("Token ผิด หรือไม่ได้ใส่ ENV!")
-    print("กรุณาใส่ Environment Variable ชื่อ TOKEN")
+    print("❌ Token ผิดหรือไม่ได้ตั้ง ENV!")
     exit()
 
 user = r.json()
-print(f"✅ เข้าสู่ระบบแล้ว → {user['username']} ({user['id']})")
+print(f"✅ ล็อกอินสำเร็จ → {user['username']} ({user['id']})")
 
 activity = {
     "name": "Custom Status",
@@ -55,11 +53,7 @@ async def discord_gateway():
             "op": 2,
             "d": {
                 "token": TOKEN,
-                "properties": {
-                    "$os": "windows",
-                    "$browser": "chrome",
-                    "$device": "pc"
-                },
+                "properties": {"$os": "windows", "$browser": "chrome", "$device": "pc"},
                 "presence": {
                     "status": STATUS,
                     "afk": False,
@@ -68,6 +62,8 @@ async def discord_gateway():
             }
         }
         await ws.send(json.dumps(identify))
+
+        print("✅ Connected to Discord Gateway")
 
         while True:
             try:
@@ -79,6 +75,11 @@ async def discord_gateway():
                 print("Connection lost, reconnecting...", e)
                 break
 
+# ============== วนลูปหลัก ==============
 while True:
-    asyncio.run(discord_gateway())
-    await asyncio.sleep(5)   # แก้จาก asyncio.sleep เป็น await
+    try:
+        asyncio.run(discord_gateway())
+    except Exception as e:
+        print("เกิดข้อผิดพลาดใหญ่:", e)
+    print("Reconnecting in 5 seconds...")
+    asyncio.sleep(5)   # ← ใช้แบบนี้ (ไม่ใส่ await)
