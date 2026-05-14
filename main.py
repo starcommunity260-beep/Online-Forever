@@ -8,8 +8,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 TOKEN = os.environ.get("TOKEN", "PUT_YOUR_TOKEN_HERE")
 STATUS = "online"
-CUSTOM_STATUS = "Online 24/7 🔥"
-EMOJI = "🔥"
+GAME_NAME = "Minecraft"  # เปลี่ยนชื่อเกมได้เลย
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -35,11 +34,8 @@ user = r.json()
 print(f"[OK] Logged in as {user['username']} ({user['id']})", flush=True)
 
 activity = {
-    "name": "Custom Status",
-    "type": 4,
-    "state": CUSTOM_STATUS,
-    "id": "custom",
-    "emoji": {"name": EMOJI, "id": None, "animated": False}
+    "name": GAME_NAME,
+    "type": 0  # 0 = Playing
 }
 
 async def discord_gateway():
@@ -58,7 +54,7 @@ async def discord_gateway():
                     count += 1
                     print(f"[HEARTBEAT] Sent #{count} - Bot is alive!", flush=True)
                 except:
-                    print("[HEARTBEAT] Failed - connection dropped", flush=True)
+                    print("[HEARTBEAT] Failed", flush=True)
                     break
 
         asyncio.create_task(heartbeat())
@@ -70,9 +66,7 @@ async def discord_gateway():
                 "presence": {"status": STATUS, "afk": False, "activities": [activity]}
             }
         }))
-        print("[OK] Connected to Discord Gateway!", flush=True)
-        print(f"[OK] Status set to: {STATUS}", flush=True)
-        print(f"[OK] Custom status: {CUSTOM_STATUS}", flush=True)
+        print(f"[OK] Connected! Playing {GAME_NAME}", flush=True)
 
         msg_count = 0
         while True:
